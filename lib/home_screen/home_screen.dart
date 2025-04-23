@@ -11,8 +11,17 @@ import 'controller/product_controller.dart';
 
 class HomeScreen extends StatelessWidget {
   final ProductController _controller = Get.put(ProductController());
+  final ScrollController _scrollController = ScrollController();
 
-  HomeScreen({super.key});
+  HomeScreen({super.key}) {
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+              _scrollController.position.maxScrollExtent &&
+          !_controller.isFetchingMore.value) {
+        _controller.fetchProducts(isLoadMore: true);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +38,7 @@ class HomeScreen extends StatelessWidget {
         return LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
+              controller: _scrollController,
               child: Column(
                 children: [
                   GridView.count(
@@ -127,6 +137,11 @@ class HomeScreen extends StatelessWidget {
                       );
                     }),
                   ),
+                  if (_controller.isFetchingMore.value)
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    ),
                   const SpaceWidget(spaceHeight: 20),
                 ],
               ),

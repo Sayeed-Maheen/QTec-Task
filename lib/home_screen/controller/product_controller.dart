@@ -8,7 +8,10 @@ class ProductController extends GetxController {
   final ProductRepository _repository = ProductRepository();
 
   var isLoading = false.obs;
+  var isFetchingMore = false.obs;
   var productList = <AllProduct>[].obs;
+  var currentPage = 1.obs;
+  final int itemsPerPage = 10;
 
   @override
   void onInit() {
@@ -16,21 +19,48 @@ class ProductController extends GetxController {
     fetchProducts();
   }
 
-  void fetchProducts() async {
-    isLoading.value = true;
+  void fetchProducts({bool isLoadMore = false}) async {
+    if (isLoadMore) {
+      isFetchingMore.value = true;
+    } else {
+      isLoading.value = true;
+    }
+
     try {
       final response = await _repository.fetchAllProducts();
       if (response != null) {
-        productList.value =
-            response.map((e) => AllProduct.fromJson(e)).toList();
-        print("Mapped Products: ${productList.length}"); // Debug log
+        final products =
+            response
+                .map((e) => AllProduct.fromJson(e))
+                .toList()
+                .cast<AllProduct>();
+
+        // Paginate the data
+        final startIndex = (currentPage.value - 1) * itemsPerPage;
+        final endIndex = startIndex + itemsPerPage;
+        final paginatedProducts = products.sublist(
+          startIndex,
+          endIndex > products.length ? products.length : endIndex,
+        );
+
+        if (isLoadMore) {
+          productList.addAll(paginatedProducts);
+        } else {
+          productList.value = paginatedProducts;
+        }
+
+        currentPage.value++;
       } else {
         AppSnackBar.error("Failed to fetch products.");
       }
     } catch (e) {
       AppSnackBar.error("An error occurred while fetching products.");
     } finally {
-      isLoading.value = false;
+      if (isLoadMore) {
+        isFetchingMore.value = false;
+      } else {
+        isLoading.value = false;
+      }
     }
   }
 }
