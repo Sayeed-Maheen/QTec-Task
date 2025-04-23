@@ -1,12 +1,13 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../models/all_products_model.dart';
 import '../../services/repository/product_repository.dart';
 import '../../widgets/app_snack_bar/app_snack_bar.dart';
 
-/// Controller for managing product data, including fetching, pagination, and search filtering.
+/// Controller for managing product data, scrolling, and search input.
 class ProductController extends GetxController {
-  // Repository for fetching products from the data source
+  // Repository for fetching products
   final ProductRepository _repository = ProductRepository();
 
   // Observables for reactive state management
@@ -19,42 +20,67 @@ class ProductController extends GetxController {
   var hasReachedEnd = false.obs; // Tracks if all data has been fetched
   final int itemsPerPage = 10; // Number of items per page
 
+  // Controllers for UI interactions
+  final ScrollController scrollController = ScrollController();
+  final TextEditingController searchController = TextEditingController();
+
   @override
   void onInit() {
     super.onInit();
-    // Fetch initial products on controller initialization
+    // Fetch initial products
     fetchProducts();
-    // Debounce search query changes to filter products efficiently
+    // Setup scroll listener for infinite scroll
+    setupScrollListener();
+    // Debounce search query changes for efficient filtering
     debounce(
       searchQuery,
       (_) => filterProducts(),
-      time: const Duration(milliseconds: 300),
+      time: const Duration(milliseconds: 200), // Reduced for responsiveness
     );
+    // Sync searchController with initial searchQuery
+    searchController.text = searchQuery.value;
+  }
+
+  /// Sets up the scroll listener for infinite scroll.
+  void setupScrollListener() {
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >=
+              scrollController.position.maxScrollExtent - 50 &&
+          !isFetchingMore.value &&
+          !hasReachedEnd.value) {
+        print('Scroll listener triggered: Loading more products...');
+        fetchProducts(isLoadMore: true);
+      }
+    });
+    print('Scroll listener initialized');
+  }
+
+  /// Updates search query from UI input.
+  void updateSearchQuery(String value) {
+    print('Search query updated: $value');
+    searchQuery.value = value;
   }
 
   /// Fetches products from the repository, supporting initial load, infinite scroll, and refresh.
-  /// - [isLoadMore]: If true, appends new products for infinite scroll.
-  /// - [isRefresh]: If true, resets state and fetches fresh data for pull-to-refresh.
   Future<void> fetchProducts({
     bool isLoadMore = false,
     bool isRefresh = false,
   }) async {
-    // Exit early if no more data is available for infinite scroll
     if (hasReachedEnd.value && isLoadMore) {
       print('No more data to fetch (hasReachedEnd is true)');
       return;
     }
 
-    // Reset state for pull-to-refresh
     if (isRefresh) {
-      print('Refreshing: Resetting state');
+      print('Refreshing: Resetting state and clearing search');
       currentPage.value = 1;
       productList.clear();
       filteredList.clear();
       hasReachedEnd.value = false;
+      searchController.clear();
+      searchQuery.value = '';
     }
 
-    // Set loading states
     if (isLoadMore) {
       isFetchingMore.value = true;
     } else {
@@ -62,10 +88,8 @@ class ProductController extends GetxController {
     }
 
     try {
-      // Fetch products from the repository
       final response = await _repository.fetchAllProducts();
       if (response != null) {
-        // Convert response to list of AllProduct objects
         final products =
             response
                 .map((e) => AllProduct.fromJson(e))
@@ -74,7 +98,6 @@ class ProductController extends GetxController {
 
         print('Fetched ${products.length} products from repository');
 
-        // Paginate the data
         final startIndex = (currentPage.value - 1) * itemsPerPage;
         final endIndex = startIndex + itemsPerPage;
         final paginatedProducts =
@@ -89,14 +112,12 @@ class ProductController extends GetxController {
           'Paginated ${paginatedProducts.length} products (page: ${currentPage.value}, start: $startIndex, end: $endIndex)',
         );
 
-        // Check if we've reached the end of the data
         if (paginatedProducts.isEmpty ||
             paginatedProducts.length < itemsPerPage) {
           hasReachedEnd.value = true;
           print('Reached end of data: No more products to fetch');
         }
 
-        // Update productList based on load type
         if (isLoadMore) {
           productList.addAll(paginatedProducts);
           print(
@@ -109,11 +130,9 @@ class ProductController extends GetxController {
           );
         }
 
-        // Increment page for next fetch
         currentPage.value++;
         print('Updated productList length: ${productList.length}');
 
-        // Reapply search filter to update filteredList
         filterProducts();
       } else {
         print('Repository returned null response');
@@ -123,7 +142,6 @@ class ProductController extends GetxController {
       print('Error fetching products: $e');
       AppSnackBar.error("An error occurred while fetching products.");
     } finally {
-      // Reset loading states
       if (isLoadMore) {
         isFetchingMore.value = false;
       } else {
@@ -132,13 +150,11 @@ class ProductController extends GetxController {
     }
   }
 
-  /// Filters products based on the current search query.
+  /// Filters products based on the search query.
   void filterProducts() {
     if (searchQuery.value.trim().isEmpty) {
-      // Use spread operator to force reactive update
-      filteredList.value = [...productList];
+      filteredList.value = [...productList]; // Force reactive update
     } else {
-      // Filter products by title matching the search query
       filteredList.value =
           productList
               .where(
@@ -151,5 +167,13 @@ class ProductController extends GetxController {
               .toList();
     }
     print('Filtered list updated: ${filteredList.length} products');
+  }
+
+  @override
+  void onClose() {
+    // Clean up controllers to prevent memory leaks
+    scrollController.dispose();
+    searchController.dispose();
+    super.onClose();
   }
 }

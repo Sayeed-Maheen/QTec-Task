@@ -12,20 +12,8 @@ import 'controller/product_controller.dart';
 
 class HomeScreen extends StatelessWidget {
   final ProductController _controller = Get.put(ProductController());
-  final ScrollController _scrollController = ScrollController();
-  final TextEditingController searchController = TextEditingController();
 
-  HomeScreen({super.key}) {
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent - 50 &&
-          !_controller.isFetchingMore.value &&
-          !_controller.hasReachedEnd.value) {
-        print('Scroll listener triggered: Loading more products...');
-        _controller.fetchProducts(isLoadMore: true);
-      }
-    });
-  }
+  HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +35,7 @@ class HomeScreen extends StatelessWidget {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
-                  controller: _scrollController,
+                  controller: _controller.scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
                     children: [
@@ -55,13 +43,12 @@ class HomeScreen extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: TextFieldWidget(
-                          controller: searchController,
+                          controller: _controller.searchController,
                           hintText: "Search Anything...",
                           maxLines: 1,
-                          onChanged: (value) {
-                            print('Search query updated: $value');
-                            _controller.searchQuery.value = value;
-                          },
+                          onChanged:
+                              _controller
+                                  .updateSearchQuery, // Direct update to searchQuery
                         ),
                       ),
                       SpaceWidget(spaceHeight: 24),
