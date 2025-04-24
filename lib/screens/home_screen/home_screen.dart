@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:qtec_task/constants/app_colors.dart';
-import 'package:qtec_task/screens/product_screen/widgets/product_card.dart';
+import 'package:qtec_task/screens/home_screen/widgets/product_card.dart';
 import 'package:qtec_task/widgets/icon_button_widget/icon_button_widget.dart';
 import 'package:qtec_task/widgets/space_widget/space_widget.dart';
 import 'package:qtec_task/widgets/text_button_widget/text_button_widget.dart';
+
 import '../../constants/app_icons_path.dart';
 import '../../widgets/text_field_widget/text_field_widget.dart';
 import '../../widgets/text_widget/text_widgets.dart';
 import 'controller/product_controller.dart';
 
-class ProductScreen extends StatelessWidget {
+class HomeScreen extends StatelessWidget {
   final ProductController _controller = Get.put(ProductController());
 
-  ProductScreen({super.key});
+  HomeScreen({super.key});
 
   /// Shows a bottom sheet with filter options.
   void _showFilterBottomSheet(BuildContext context) {

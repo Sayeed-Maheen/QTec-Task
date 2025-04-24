@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:qtec_task/screens/product_screen/product_screen.dart';
+import 'package:qtec_task/screens/home_screen/home_screen.dart';
 import 'package:qtec_task/screens/splash_screen/splash_screen.dart';
 
 import 'app_routes.dart';
@@ -15,8 +15,8 @@ class RouteManager {
         // binding: GeneralBindings(),
       ),
       GetPage(
-        name: AppRoutes.productScreen,
-        page: () => ProductScreen(),
+        name: AppRoutes.homeScreen,
+        page: () => HomeScreen(),
         // binding: GeneralBindings(),
       ),
     ];
