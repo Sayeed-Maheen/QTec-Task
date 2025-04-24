@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_icons_path.dart';
-import '../../utils/app_size.dart';
-import '../../widgets/app_image/app_image.dart';
-import '../../widgets/icon_widget/icon_widget.dart';
-import '../../widgets/space_widget/space_widget.dart';
-import '../../widgets/text_widget/text_widgets.dart';
+import '../../../constants/app_colors.dart';
+import '../../../constants/app_icons_path.dart';
+import '../../../utils/app_size.dart';
+import '../../../widgets/app_image/app_image.dart';
+import '../../../widgets/icon_widget/icon_widget.dart';
+import '../../../widgets/space_widget/space_widget.dart';
+import '../../../widgets/text_widget/text_widgets.dart';
 
 class ProductCard extends StatelessWidget {
   final String imageUrl;

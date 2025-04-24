@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../models/all_products_model.dart';
-import '../../services/repository/product_repository.dart';
-import '../../widgets/app_snack_bar/app_snack_bar.dart';
+import '../../../models/all_products_model.dart';
+import '../../../services/repository/product_repository.dart';
+import '../../../widgets/app_snack_bar/app_snack_bar.dart';
 
 /// Enum to represent filter options for sorting products.
 enum FilterOption { none, priceHighToLow, priceLowToHigh }
