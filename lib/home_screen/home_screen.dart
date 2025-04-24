@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:qtec_task/constants/app_colors.dart';
+import 'package:qtec_task/home_screen/widgets/product_card.dart';
+import 'package:qtec_task/widgets/icon_button_widget/icon_button_widget.dart';
 import 'package:qtec_task/widgets/space_widget/space_widget.dart';
+import 'package:qtec_task/widgets/text_button_widget/text_button_widget.dart';
 
 import '../constants/app_icons_path.dart';
-import '../widgets/app_image/app_image.dart';
-import '../widgets/icon_widget/icon_widget.dart';
 import '../widgets/text_field_widget/text_field_widget.dart';
 import '../widgets/text_widget/text_widgets.dart';
 import 'controller/product_controller.dart';
@@ -14,6 +15,67 @@ class HomeScreen extends StatelessWidget {
   final ProductController _controller = Get.put(ProductController());
 
   HomeScreen({super.key});
+
+  /// Shows a bottom sheet with filter options.
+  void _showFilterBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.white,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.only(
+            left: 24,
+            top: 24,
+            right: 8,
+            bottom: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const TextWidget(
+                    text: 'Sort By',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontColor: AppColors.black,
+                  ),
+                  CloseButton(
+                    color: AppColors.black,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SpaceWidget(spaceHeight: 16),
+              TextButtonWidget(
+                onPressed: () {
+                  _controller.updateFilterOption(FilterOption.priceHighToLow);
+                  Navigator.pop(context);
+                },
+                text: "Price - High to Low",
+                textColor: AppColors.black,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+              const SpaceWidget(spaceHeight: 8),
+              TextButtonWidget(
+                onPressed: () {
+                  _controller.updateFilterOption(FilterOption.priceLowToHigh);
+                  Navigator.pop(context);
+                },
+                text: "Price - Low to High",
+                textColor: AppColors.black,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,16 +102,31 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       SpaceWidget(spaceHeight: 24),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: TextFieldWidget(
-                          controller: _controller.searchController,
-                          hintText: "Search Anything...",
-                          maxLines: 1,
-                          onChanged:
-                              _controller
-                                  .updateSearchQuery, // Direct update to searchQuery
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              child: TextFieldWidget(
+                                controller: _controller.searchController,
+                                hintText: "Search Anything...",
+                                maxLines: 1,
+                                onChanged: _controller.updateSearchQuery,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 20),
+                            child: IconButtonWidget(
+                              icon: AppIconsPath.filterIcon,
+                              size: 40,
+                              color: AppColors.black,
+                              onTap: () => _showFilterBottomSheet(context),
+                            ),
+                          ),
+                        ],
                       ),
                       SpaceWidget(spaceHeight: 24),
                       if (_controller.filteredList.isEmpty)
@@ -81,86 +158,14 @@ class HomeScreen extends StatelessWidget {
                             print(
                               'Rendering product at index $index: ${product.title}',
                             );
-                            return SizedBox(
-                              width: constraints.maxWidth / 2 - 24,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  AppImage(
-                                    url: product.image,
-                                    width: constraints.maxWidth / 2 - 24,
-                                    height: constraints.maxWidth / 2 - 24,
-                                    fit: BoxFit.contain,
-                                  ),
-                                  SpaceWidget(spaceHeight: 8),
-                                  Flexible(
-                                    child: TextWidget(
-                                      text: product.title ?? "No Title",
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      fontColor: AppColors.black,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlignment: TextAlign.start,
-                                    ),
-                                  ),
-                                  SpaceWidget(spaceHeight: 8),
-                                  Row(
-                                    children: [
-                                      TextWidget(
-                                        text:
-                                            "\$${product.price?.toStringAsFixed(2) ?? "0.00"}",
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        fontColor: AppColors.black,
-                                      ),
-                                      const SpaceWidget(spaceWidth: 4),
-                                      TextWidget(
-                                        text: "\$400",
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w500,
-                                        fontColor: AppColors.black.withOpacity(
-                                          0.5,
-                                        ),
-                                        decoration: TextDecoration.lineThrough,
-                                        decorationColor: AppColors.black
-                                            .withOpacity(0.5),
-                                      ),
-                                      const SpaceWidget(spaceWidth: 4),
-                                      TextWidget(
-                                        text: "30% OFF",
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w500,
-                                        fontColor: AppColors.orange600,
-                                      ),
-                                    ],
-                                  ),
-                                  SpaceWidget(spaceHeight: 8),
-                                  Row(
-                                    children: [
-                                      IconWidget(
-                                        height: 16,
-                                        width: 16,
-                                        icon: AppIconsPath.ratingIcon,
-                                      ),
-                                      const SpaceWidget(spaceWidth: 4),
-                                      TextWidget(
-                                        text: "4.3",
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        fontColor: AppColors.black,
-                                      ),
-                                      const SpaceWidget(spaceWidth: 4),
-                                      TextWidget(
-                                        text: "(41)",
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                        fontColor: AppColors.grey500,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                            return ProductCard(
+                              imageUrl: product.image ?? "No image",
+                              title: product.title ?? "No title",
+                              price: product.price!,
+                              originalPrice: 400.00,
+                              discountPercentage: 30,
+                              rating: 4.3,
+                              reviewCount: 41,
                             );
                           },
                         ),

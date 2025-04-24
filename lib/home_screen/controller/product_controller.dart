@@ -5,7 +5,10 @@ import '../../models/all_products_model.dart';
 import '../../services/repository/product_repository.dart';
 import '../../widgets/app_snack_bar/app_snack_bar.dart';
 
-/// Controller for managing product data, scrolling, and search input.
+/// Enum to represent filter options for sorting products.
+enum FilterOption { none, priceHighToLow, priceLowToHigh }
+
+/// Controller for managing product data, scrolling, search, and filtering.
 class ProductController extends GetxController {
   // Repository for fetching products
   final ProductRepository _repository = ProductRepository();
@@ -14,10 +17,12 @@ class ProductController extends GetxController {
   var isLoading = false.obs; // Tracks initial loading state
   var isFetchingMore = false.obs; // Tracks infinite scroll loading state
   var productList = <AllProduct>[].obs; // Full list of fetched products
-  var filteredList = <AllProduct>[].obs; // Filtered list based on search query
+  var filteredList =
+      <AllProduct>[].obs; // Filtered list based on search and filter
   var searchQuery = ''.obs; // Current search query
   var currentPage = 1.obs; // Current pagination page
   var hasReachedEnd = false.obs; // Tracks if all data has been fetched
+  var filterOption = FilterOption.none.obs; // Current filter option
   final int itemsPerPage = 10; // Number of items per page
 
   // Controllers for UI interactions
@@ -35,7 +40,7 @@ class ProductController extends GetxController {
     debounce(
       searchQuery,
       (_) => filterProducts(),
-      time: const Duration(milliseconds: 200), // Reduced for responsiveness
+      time: const Duration(milliseconds: 200),
     );
     // Sync searchController with initial searchQuery
     searchController.text = searchQuery.value;
@@ -61,6 +66,13 @@ class ProductController extends GetxController {
     searchQuery.value = value;
   }
 
+  /// Updates filter option and reapplies filtering.
+  void updateFilterOption(FilterOption option) {
+    print('Filter option updated: $option');
+    filterOption.value = option;
+    filterProducts();
+  }
+
   /// Fetches products from the repository, supporting initial load, infinite scroll, and refresh.
   Future<void> fetchProducts({
     bool isLoadMore = false,
@@ -79,6 +91,7 @@ class ProductController extends GetxController {
       hasReachedEnd.value = false;
       searchController.clear();
       searchQuery.value = '';
+      // Preserve filterOption to maintain sorting after refresh
     }
 
     if (isLoadMore) {
@@ -150,13 +163,15 @@ class ProductController extends GetxController {
     }
   }
 
-  /// Filters products based on the search query.
+  /// Filters and sorts products based on search query and filter option.
   void filterProducts() {
-    if (searchQuery.value.trim().isEmpty) {
-      filteredList.value = [...productList]; // Force reactive update
-    } else {
-      filteredList.value =
-          productList
+    // Start with the full product list
+    List<AllProduct> result = [...productList];
+
+    // Apply search filter if query exists
+    if (searchQuery.value.trim().isNotEmpty) {
+      result =
+          result
               .where(
                 (product) =>
                     product.title?.toLowerCase().contains(
@@ -166,6 +181,24 @@ class ProductController extends GetxController {
               )
               .toList();
     }
+
+    // Apply price sorting based on filter option
+    switch (filterOption.value) {
+      case FilterOption.priceHighToLow:
+        result.sort((a, b) => (b.price ?? 0).compareTo(a.price ?? 0));
+        print('Sorted products: Price High to Low');
+        break;
+      case FilterOption.priceLowToHigh:
+        result.sort((a, b) => (a.price ?? 0).compareTo(b.price ?? 0));
+        print('Sorted products: Price Low to High');
+        break;
+      case FilterOption.none:
+        // No sorting applied
+        break;
+    }
+
+    // Update filteredList and force reactive update
+    filteredList.value = result;
     print('Filtered list updated: ${filteredList.length} products');
   }
 
